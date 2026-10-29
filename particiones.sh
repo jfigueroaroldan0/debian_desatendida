@@ -1,10 +1,19 @@
-#!/bin/sh
-#
-# Calcula el particionado según el tamaño del disco y la RAM del equipo.
-# Se ejecuta desde partman/early_command del preseed.
+#!/bin/bash
+
+# Autor: Jesús Figueroa Roldán
+# Versión: 1
+# Descripción: calcula el particionado según el tamaño del disco y la RAM
+# Fecha creación: 23-10-2026
+
+
+# Calcula el particionado según el tamaño del disco y la RAM del equipo y
+# prepara la receta de partman.
 #
 #   Particiones:  EFI (FAT32, solo UEFI) y /boot (ext4)
 #   LVM:          /, swap y /home
+#
+# Uso: no se ejecuta a mano. Lo lanza el instalador desde
+# partman/early_command del preseed.
 
 
 # Porcentajes del espacio LVM (/home se queda con el resto)

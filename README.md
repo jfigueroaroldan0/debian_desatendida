@@ -117,20 +117,23 @@ conectarlo: el que aparece nuevo es el USB. Hay que poner el disco entero
 2. Arranca el equipo con la ISO oficial de Debian y entra en
    **Advanced options → Automated install** (o **Graphical automated install**).
 3. El instalador configura la red y pide la ubicación del fichero de
-   preconfiguración. Escribe la URL completa del preseed:
+   preconfiguración. Escribe la **ruta completa del preseed**, no solo la IP:
 
    ```
-   http://IP/preseed.cfg
+   http://192.168.1.10/preseed.cfg
    ```
+
+   (cambiando `192.168.1.10` por la IP del servidor).
 
 A partir de ahí la instalación sigue sola. Esa entrada ya arranca con
 `auto=true priority=critical`, que retrasa las preguntas de idioma y teclado
 hasta que se ha descargado el preseed, así que las responde el propio preseed.
 
-`particiones.sh` no va dentro del preseed, así que se descarga durante la
-instalación desde la misma carpeta que `preseed.cfg`. Por eso hay que escribir
-la URL completa: con solo la IP, el instalador busca el preseed en
-`/d-i/trixie/` y el script tendría que estar en esa carpeta.
+> **Importante:** si solo se escribe la IP (`192.168.1.10`), el instalador
+> busca el preseed en `http://192.168.1.10/d-i/trixie/./preseed.cfg` y no lo
+> encuentra. Hay que escribir siempre `http://IP/preseed.cfg`. Además,
+> `particiones.sh` se descarga durante la instalación de la misma carpeta que
+> el preseed, así que los dos tienen que estar juntos en el servidor.
 
 ## Qué configura el preseed
 
