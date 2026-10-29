@@ -63,29 +63,37 @@ tal cual en un USB, este queda arrancable en los dos modos:
   `-isohybrid-gpt-basdat`).
 
 No hace falta Rufus ni ningún otro programa para hacerlo arrancable; basta con
-copiar la ISO al USB byte a byte. Hay dos formas:
+copiar la ISO al USB byte a byte. Hay dos formas de hacerlo.
 
-- **Desde el script:** pon el USB en la variable `USB` al principio de
-  `crear-iso.sh` y ejecútalo. Al terminar de generar la ISO:
-  1. Comprueba que el dispositivo existe.
-  2. Muestra su nombre, tamaño y modelo con `lsblk`, para comprobar que es el
-     USB y no otro disco.
-  3. Pide confirmación: solo graba si se responde `s`.
-  4. Graba la ISO con `dd` y espera a que esté todo escrito (`conv=fsync`),
-     así que al terminar se puede sacar el USB sin riesgo.
+#### Desde el script
 
-  ```bash
-  # Dispositivo del USB (por ejemplo /dev/sdb). Vacío para no grabar
-  USB="/dev/sdb"
-  ```
+Pon el USB en la variable `USB` al principio de `crear-iso.sh` y ejecútalo:
 
-- **A mano**, con la ISO ya generada:
+```bash
+# Dispositivo del USB (por ejemplo /dev/sdb). Vacío para no grabar
+USB="/dev/sdb"
+```
 
-  ```
-  sudo dd if=debian-13-preseed.iso of=/dev/sdb bs=4M status=progress conv=fsync
-  ```
+Al terminar de generar la ISO, el script:
 
-  Desde Windows se puede usar Rufus, eligiendo el modo **DD** cuando lo pregunte.
+1. Comprueba que el dispositivo existe.
+2. Muestra su nombre, tamaño y modelo con `lsblk`, para comprobar que es el
+   USB y no otro disco.
+3. Pide confirmación: solo graba si se responde `s`.
+4. Graba la ISO con `dd` y espera a que esté todo escrito (`conv=fsync`),
+   así que al terminar se puede sacar el USB sin riesgo.
+
+#### A mano
+
+Con la ISO ya generada:
+
+```
+sudo dd if=debian-13-preseed.iso of=/dev/sdb bs=4M status=progress conv=fsync
+```
+
+Desde Windows se puede usar Rufus, eligiendo el modo **DD** cuando lo pregunte.
+
+#### Elegir el dispositivo
 
 Para saber qué dispositivo es el USB, ejecuta `lsblk` antes y después de
 conectarlo: el que aparece nuevo es el USB. Hay que poner el disco entero
@@ -123,17 +131,6 @@ hasta que se ha descargado el preseed, así que las responde el propio preseed.
 instalación desde la misma carpeta que `preseed.cfg`. Por eso hay que escribir
 la URL completa: con solo la IP, el instalador busca el preseed en
 `/d-i/trixie/` y el script tendría que estar en esa carpeta.
-
-### Nombre del equipo
-
-Por HTTP la red se configura antes de descargar el preseed, así que el equipo
-coge el nombre que le dé el servidor DHCP en vez de `debian`. Para forzarlo,
-antes de arrancar la entrada **Automated install** pulsa `e` (UEFI) o `Tab`
-(BIOS) y añade al final de la línea del kernel:
-
-```
-hostname=debian domain=
-```
 
 ## Qué configura el preseed
 
