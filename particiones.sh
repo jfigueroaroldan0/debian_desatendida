@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Autor: Jesús Figueroa Roldán
 # Versión: 1
@@ -35,12 +35,41 @@ LOG=/var/log/particiones.log
 # Disco del USB de instalación, para no instalar encima de él
 USB=$(grep ' /cdrom ' /proc/mounts | cut -d' ' -f1 | sed 's/[0-9]*$//')
 
-# Primer disco que no sea el USB
-for D in $(list-devices disk); do
-    if [ "$D" != "$USB" ]; then
-        DISCO=$D
-        break
-    fi
+# Tipo de un disco: nvme, ssd, hdd (SATA) o virtio. El USB de instalación y
+# los demás discos USB son usb. El kernel marca los discos duros con
+# rotational=1 y los SSD con 0
+tipo_disco() {
+    NOMBRE=${1#/dev/}
+    if [ "$1" = "$USB" ]; then echo usb; return; fi
+    case "$(readlink -f /sys/block/$NOMBRE)" in
+        */usb*) echo usb; return ;;
+    esac
+    case "$NOMBRE" in
+        nvme*) echo nvme ;;
+        vd*)   echo virtio ;;
+        sd*)
+            if [ "$(cat /sys/block/$NOMBRE/queue/rotational)" = "0" ]; then
+                echo ssd
+            else
+                echo hdd
+            fi ;;
+        *)     echo otro ;;
+    esac
+}
+
+# Busca primero entre los NVMe, si no hay entre los SSD, luego entre los
+# discos duros y por último entre los virtio. Del primer tipo que tenga
+# discos se queda con el más grande. Los discos USB nunca se eligen
+for TIPO in nvme ssd hdd virtio otro; do
+    for D in $(list-devices disk); do
+        if [ "$(tipo_disco "$D")" != "$TIPO" ]; then continue; fi
+        TAM=$(cat /sys/block/${D#/dev/}/size)
+        if [ -z "$DISCO" ] || [ $TAM -gt $MAYOR ]; then
+            DISCO=$D
+            MAYOR=$TAM
+        fi
+    done
+    if [ -n "$DISCO" ]; then break; fi
 done
 
 # Tamaño del disco y de la RAM

@@ -167,10 +167,61 @@ Lo hace `particiones.sh`, que se ejecuta justo antes del particionado
 
 ### Disco elegido
 
-Usa el primer disco del equipo **que no sea el USB de instalación**. El USB lo
-detecta por el dispositivo montado en `/cdrom`. GRUB se instala en ese mismo disco.
+El script elige **un solo disco** y instala todo en él: **el más rápido y, si
+hay varios del mismo tipo, el más grande**. Paso a paso:
+
+1. **Descarta los discos USB.** Tanto el USB de instalación (el que está
+   montado en `/cdrom`) como cualquier otro disco USB conectado, por ejemplo
+   un disco duro externo. Así nunca instala en un disco externo.
+2. **Busca por tipo de disco, del más rápido al más lento:**
+
+   | Orden | Tipo de disco | Nombre en el sistema |
+   |---|---|---|
+   | 1 | NVMe | `/dev/nvme0n1`, `/dev/nvme1n1`... |
+   | 2 | SSD SATA | `/dev/sda`, `/dev/sdb`... |
+   | 3 | Disco duro (HDD) SATA | `/dev/sda`, `/dev/sdb`... |
+   | 4 | Virtio (máquinas virtuales) | `/dev/vda`, `/dev/vdb`... |
+   | 5 | Otros (eMMC, etc.) | `/dev/mmcblk0`... |
+
+   Primero mira si hay algún NVMe; si no hay, algún SSD; si no, algún disco
+   duro, y así. Para separar los SSD de los discos duros SATA usa el valor
+   que da el kernel en `/sys/block/sdX/queue/rotational`: `1` es un disco que
+   gira (HDD) y `0` uno que no (SSD).
+3. **Del primer tipo que tenga discos, se queda con el más grande.**
+
+GRUB se instala en ese mismo disco. Los demás discos no se tocan: ni se
+formatean ni se montan.
+
+> **Con varios discos en BIOS:** el equipo arranca desde el disco que esté
+> primero en el orden de arranque de la BIOS, que no tiene por qué ser el que
+> ha elegido el script. Si al terminar sale "No bootable device", hay que
+> poner el disco elegido el primero en el orden de arranque. En UEFI no pasa,
+> porque el instalador registra la entrada de Debian en el firmware.
 
 > **Atención:** borra el disco elegido entero, sin preguntar.
+
+El disco que se ha elegido queda apuntado en `/var/log/particiones.log` del
+sistema instalado.
+
+#### Ejemplos
+
+| Discos del equipo | Disco elegido | Por qué |
+|---|---|---|
+| NVMe 512 GB + HDD SATA 2 TB | NVMe 512 GB | el NVMe es más rápido, aunque sea más pequeño |
+| SSD SATA 250 GB + HDD SATA 2 TB | SSD 250 GB | el SSD es más rápido que el HDD |
+| SSD SATA 250 GB + SSD SATA 500 GB | SSD 500 GB | igual de rápidos: gana el más grande |
+| HDD SATA 500 GB + HDD SATA 1 TB | HDD 1 TB | igual de rápidos: gana el más grande |
+| NVMe 256 GB + NVMe 1 TB + HDD SATA 4 TB | NVMe 1 TB | los NVMe son los más rápidos, y de ellos el más grande |
+| Virtio 20 GB + virtio 50 GB (máquina virtual) | virtio 50 GB | igual de rápidos: gana el más grande |
+| HDD SATA 500 GB + SSD USB externo 1 TB | HDD 500 GB | los discos USB se descartan siempre |
+
+En el caso típico de un equipo con un disco rápido para el sistema (NVMe o
+SSD) y un disco duro grande para datos, el sistema se instala en el rápido y el
+de datos se queda como estaba.
+
+En una máquina virtual el tipo de disco depende de cómo se configure: en
+VirtualBox suelen ser SATA (`sda`) y en KVM/virt-manager virtio (`vda`). Los
+discos SATA virtuales suelen aparecer como HDD aunque estén en un SSD.
 
 ### Esquema
 
