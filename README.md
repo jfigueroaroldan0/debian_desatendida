@@ -25,23 +25,15 @@ el script.
 Primero descarga la ISO oficial netinst de Debian 13 (amd64) desde
 <https://www.debian.org/CD/netinst/>.
 
-El script se puede ejecutar de dos formas:
+La ISO oficial tiene que estar **sí o sí en la carpeta del proyecto**, junto a
+`crear-iso.sh`, `preseed.cfg` y `particiones.sh`, y con el nombre
+`debian-13.7.0-amd64-netinst.iso`. Después, desde esa carpeta:
 
-- **Con la ISO en la carpeta del proyecto** (junto al script, con el nombre
-  `debian-13.7.0-amd64-netinst.iso`):
+```
+sudo ./crear-iso.sh
+```
 
-  ```
-  sudo ./crear-iso.sh
-  ```
-
-- **Con la ISO en otra carpeta**, o con otro nombre, pasando su ruta:
-
-  ```
-  sudo ./crear-iso.sh ~/Descargas/debian-13.7.0-amd64-netinst.iso
-  ```
-
-`preseed.cfg` y `particiones.sh` siempre tienen que estar en la carpeta del
-script. La ISO nueva, `debian-13-preseed.iso`, se crea también en esa carpeta.
+La ISO nueva, `debian-13-preseed.iso`, se crea también en esa carpeta.
 
 El script:
 
@@ -59,6 +51,48 @@ El script:
    `/dev/sdb`), graba la ISO en él después de pedir confirmación.
 
 Con la ISO solo hay que arrancar el equipo: no hay que escribir nada.
+
+### Crear el USB de instalación
+
+La ISO generada es **híbrida**: sirve tanto para CD como para USB. Grabada
+tal cual en un USB, este queda arrancable en los dos modos:
+
+- **BIOS:** por el sector de arranque MBR copiado de la ISO oficial
+  (`-isohybrid-mbr`).
+- **UEFI:** por la partición EFI que lleva la ISO (`-e boot/grub/efi.img` y
+  `-isohybrid-gpt-basdat`).
+
+No hace falta Rufus ni ningún otro programa para hacerlo arrancable; basta con
+copiar la ISO al USB byte a byte. Hay dos formas:
+
+- **Desde el script:** pon el USB en la variable `USB` al principio de
+  `crear-iso.sh` y ejecútalo. Al terminar de generar la ISO:
+  1. Comprueba que el dispositivo existe.
+  2. Muestra su nombre, tamaño y modelo con `lsblk`, para comprobar que es el
+     USB y no otro disco.
+  3. Pide confirmación: solo graba si se responde `s`.
+  4. Graba la ISO con `dd` y espera a que esté todo escrito (`conv=fsync`),
+     así que al terminar se puede sacar el USB sin riesgo.
+
+  ```bash
+  # Dispositivo del USB (por ejemplo /dev/sdb). Vacío para no grabar
+  USB="/dev/sdb"
+  ```
+
+- **A mano**, con la ISO ya generada:
+
+  ```
+  sudo dd if=debian-13-preseed.iso of=/dev/sdb bs=4M status=progress conv=fsync
+  ```
+
+  Desde Windows se puede usar Rufus, eligiendo el modo **DD** cuando lo pregunte.
+
+Para saber qué dispositivo es el USB, ejecuta `lsblk` antes y después de
+conectarlo: el que aparece nuevo es el USB. Hay que poner el disco entero
+(`/dev/sdb`), no una partición (`/dev/sdb1`).
+
+> **Atención:** grabar la ISO borra todo el contenido del dispositivo. Si se
+> pone el disco equivocado, se pierde todo lo que tenga.
 
 ## Método 2: por HTTP
 

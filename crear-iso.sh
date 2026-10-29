@@ -9,9 +9,8 @@
 # Genera una ISO de Debian 13 con instalación desatendida (BIOS y UEFI)
 # a partir de la ISO oficial, y si se indica la graba en un USB.
 #
-# Uso: sudo ./crear-iso.sh [ruta de la ISO oficial]
-# preseed.cfg y particiones.sh deben estar en esta misma carpeta. Si no se
-# indica la ISO, se busca debian-13.7.0-amd64-netinst.iso en esta carpeta.
+# Uso: sudo ./crear-iso.sh
+# La ISO oficial, preseed.cfg y particiones.sh deben estar en esta misma carpeta.
 
 
 # Colores
@@ -22,9 +21,7 @@ VERDE="\e[32m"
 
 # Variables
 
-# ISO oficial: la indicada como argumento o la de esta carpeta. Se guarda la
-# ruta absoluta porque el script se cambia a su propia carpeta
-ISO="$(realpath -m "${1:-$(dirname "$0")/debian-13.7.0-amd64-netinst.iso}")"
+ISO="debian-13.7.0-amd64-netinst.iso"
 ISO_NUEVA="debian-13-preseed.iso"
 FICHEROS="preseed.cfg particiones.sh"
 ESPERA=5
