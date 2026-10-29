@@ -96,8 +96,16 @@ conectarlo: el que aparece nuevo es el USB. Hay que poner el disco entero
 
 ## Método 2: por HTTP
 
-1. Copia `preseed.cfg` y `particiones.sh` en **la misma carpeta** de un
-   servidor web.
+1. Sirve `preseed.cfg` y `particiones.sh` por HTTP. Basta con levantar un
+   servidor web con Python desde la carpeta del proyecto:
+
+   ```
+   sudo python3 -m http.server 80
+   ```
+
+   Sirve los ficheros de la carpeta actual en el puerto 80 (hace falta `sudo`
+   por ser un puerto menor de 1024). Se para con `Ctrl+C` al terminar la
+   instalación. Con `ip a` se ve la IP del equipo, que es la que va en la URL.
 2. Arranca el equipo con la ISO oficial de Debian y entra en
    **Advanced options → Automated install** (o **Graphical automated install**).
 3. El instalador configura la red y pide la ubicación del fichero de
