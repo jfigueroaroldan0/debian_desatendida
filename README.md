@@ -15,17 +15,35 @@ usuario, en equipos con BIOS o UEFI. El preseed se puede usar de dos formas:
 | `preseed.cfg` | Respuestas a todas las preguntas del instalador. |
 | `particiones.sh` | Calcula el particionado según el disco y la RAM del equipo. |
 | `crear-iso.sh` | Genera la ISO desatendida a partir de la ISO oficial. |
-| `debian-13.7.0-amd64-netinst.iso` | ISO oficial de Debian (netinst), de la que parte el script. |
-| `debian-13-preseed.iso` | ISO generada por el script. |
+
+Las ISO no están en el repositorio porque pesan demasiado (`.gitignore` las
+excluye). La oficial hay que descargarla, y `debian-13-preseed.iso` la genera
+el script.
 
 ## Método 1: ISO personalizada
 
-```
-sudo ./crear-iso.sh
-```
+Primero descarga la ISO oficial netinst de Debian 13 (amd64) desde
+<https://www.debian.org/CD/netinst/>.
 
-La ISO oficial, `preseed.cfg` y `particiones.sh` tienen que estar en la misma
-carpeta que el script. El script:
+El script se puede ejecutar de dos formas:
+
+- **Con la ISO en la carpeta del proyecto** (junto al script, con el nombre
+  `debian-13.7.0-amd64-netinst.iso`):
+
+  ```
+  sudo ./crear-iso.sh
+  ```
+
+- **Con la ISO en otra carpeta**, o con otro nombre, pasando su ruta:
+
+  ```
+  sudo ./crear-iso.sh ~/Descargas/debian-13.7.0-amd64-netinst.iso
+  ```
+
+`preseed.cfg` y `particiones.sh` siempre tienen que estar en la carpeta del
+script. La ISO nueva, `debian-13-preseed.iso`, se crea también en esa carpeta.
+
+El script:
 
 1. Instala `xorriso` y `cpio` si faltan.
 2. Extrae la ISO oficial.
@@ -46,21 +64,34 @@ Con la ISO solo hay que arrancar el equipo: no hay que escribir nada.
 
 1. Copia `preseed.cfg` y `particiones.sh` en **la misma carpeta** de un
    servidor web.
-2. Arranca el equipo con la ISO oficial de Debian, entra en el menú de
-   arranque (tecla `e` en GRUB o `Tab` en isolinux) y añade a la línea del kernel:
+2. Arranca el equipo con la ISO oficial de Debian y entra en
+   **Advanced options → Automated install** (o **Graphical automated install**).
+3. El instalador configura la red y pide la ubicación del fichero de
+   preconfiguración. Escribe la URL completa del preseed:
 
    ```
-   auto=true priority=critical url=http://IP/preseed.cfg hostname=debian domain= language=es country=ES keymap=es
+   http://IP/preseed.cfg
    ```
 
-Por HTTP la red se configura antes de descargar el preseed, así que el idioma,
-el teclado y el nombre del equipo se pasan en el arranque. Si no se pone
-`hostname=debian`, el equipo coge el nombre que le dé el DHCP.
+A partir de ahí la instalación sigue sola. Esa entrada ya arranca con
+`auto=true priority=critical`, que retrasa las preguntas de idioma y teclado
+hasta que se ha descargado el preseed, así que las responde el propio preseed.
 
 `particiones.sh` no va dentro del preseed, así que se descarga durante la
-instalación desde la misma carpeta que `preseed.cfg`. Hay que poner la URL
-completa en `url=`: con la forma corta (`url=IP`) el instalador busca en
+instalación desde la misma carpeta que `preseed.cfg`. Por eso hay que escribir
+la URL completa: con solo la IP, el instalador busca el preseed en
 `/d-i/trixie/` y el script tendría que estar en esa carpeta.
+
+### Nombre del equipo
+
+Por HTTP la red se configura antes de descargar el preseed, así que el equipo
+coge el nombre que le dé el servidor DHCP en vez de `debian`. Para forzarlo,
+antes de arrancar la entrada **Automated install** pulsa `e` (UEFI) o `Tab`
+(BIOS) y añade al final de la línea del kernel:
+
+```
+hostname=debian domain=
+```
 
 ## Qué configura el preseed
 
